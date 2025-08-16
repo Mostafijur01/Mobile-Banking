@@ -1,1 +1,522 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📱 মোবাইল দোকান হিসাব</title>
+  <style>
+    :root{
+      --bg:#0f172a; /* slate-900 */
+      --panel:#111827; /* gray-900 */
+      --muted:#1f2937; /* gray-800 */
+      --text:#e5e7eb; /* gray-200 */
+      --accent:#22c55e; /* green-500 */
+      --accent-2:#60a5fa; /* blue-400 */
+      --danger:#ef4444; /* red-500 */
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    header{position:sticky;top:0;background:linear-gradient(180deg,var(--panel),rgba(17,24,39,.6));backdrop-filter:blur(8px);z-index:50;border-bottom:1px solid #1f2937}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px}
+    h1{margin:0;font-size:20px;display:flex;gap:10px;align-items:center}
+    h2{margin:10px 0 6px;font-size:16px;opacity:.95}
+    nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .tab{border:1px solid #374151;border-radius:12px;padding:8px 12px;background:#0b1220;color:#cbd5e1;cursor:pointer;font-weight:600}
+    .tab.active{border-color:var(--accent);color:#ecfccb;box-shadow:0 0 0 2px rgba(34,197,94,.25) inset}
 
+    .grid{display:grid;gap:14px}
+    @media(min-width:960px){.grid.cols-2{grid-template-columns:1fr 1fr}}
+
+    .card{background:linear-gradient(180deg,#0b1220,#0b1220 60%,#0e1628);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .muted{color:#9ca3af}
+
+    label{font-size:12px;color:#9ca3af}
+    input,select,textarea{width:100%;background:#0a0f1c;border:1px solid #253047;border-radius:12px;padding:10px 12px;color:var(--text);outline:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+    .row{display:grid;gap:10px}
+    @media(min-width:700px){.row.cols-3{grid-template-columns:1fr 1fr 1fr}.row.cols-4{grid-template-columns:1fr 1fr 1fr 1fr}.row.cols-5{grid-template-columns:repeat(5,1fr)}}
+
+    button{border:0;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn{background:var(--accent);color:#052e16}
+    .btn.secondary{background:#0a0f1c;color:#cbd5e1;border:1px solid #2b364f}
+    .btn.danger{background:var(--danger);color:#fff}
+    .btn.ghost{background:transparent;color:#cbd5e1;border:1px dashed #2b364f}
+
+    table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden}
+    th,td{padding:10px 8px;border-bottom:1px solid #1f2937;text-align:left}
+    th{font-size:12px;letter-spacing:.02em;color:#a7b0c0;background:#0a0f1c}
+    tbody tr:hover{background:#0d1526}
+
+    .stat{display:flex;align-items:center;gap:10px}
+    .stat .v{font-size:20px;font-weight:800}
+
+    .footer{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .pill{border:1px solid #29324a;padding:8px 12px;border-radius:999px;background:#0b1220;color:#cbd5e1}
+
+    .right{text-align:right}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>📱 মোবাইল দোকান হিসাব</h1>
+      <nav>
+        <button class="tab active" data-tab="dashboard">ড্যাশবোর্ড</button>
+        <button class="tab" data-tab="flexi">Flexi Load</button>
+        <button class="tab" data-tab="banking">Mobile Banking</button>
+        <button class="tab" data-tab="profit">Daily Profit</button>
+        <button class="tab" data-tab="data">ডাটা / Export</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="app">
+    <!-- DASHBOARD -->
+    <section class="grid cols-2 card" data-page="dashboard">
+      <div>
+        <h2>আজকের সংক্ষিপ্তসার</h2>
+        <div class="grid cols-2">
+          <div class="card">
+            <div class="stat"><span>⚡</span><div>
+              <div class="muted">Flexi Load (আজ)</div>
+              <div class="v" id="sumFlexiToday">0</div>
+            </div></div>
+          </div>
+          <div class="card">
+            <div class="stat"><span>🏦</span><div>
+              <div class="muted">Mobile Banking (আজ)</div>
+              <div class="v" id="sumBankingToday">0</div>
+            </div></div>
+          </div>
+          <div class="card">
+            <div class="stat"><span>📈</span><div>
+              <div class="muted">Daily Profit (আজ)</div>
+              <div class="v" id="sumProfitToday">0</div>
+            </div></div>
+          </div>
+          <div class="card">
+            <div class="stat"><span>🧮</span><div>
+              <div class="muted">All Total (আজ)</div>
+              <div class="v" id="sumAllToday">0</div>
+            </div></div>
+          </div>
+        </div>
+        <div class="footer">
+          <span class="pill">📅 <span id="todayLabel"></span></span>
+          <button class="btn secondary" onclick="resetToday()">আজকের ডাটা ক্লিয়ার</button>
+        </div>
+      </div>
+      <div>
+        <h2>তারিখ বাছাই</h2>
+        <div class="row cols-3">
+          <div>
+            <label>তারিখ</label>
+            <input type="date" id="dashDate" />
+          </div>
+          <div>
+            <label>Flexi Load (তারিখ অনুযায়ী)</label>
+            <input id="sumFlexiByDate" disabled />
+          </div>
+          <div>
+            <label>Mobile Banking (তারিখ অনুযায়ী)</label>
+            <input id="sumBankingByDate" disabled />
+          </div>
+        </div>
+        <div class="footer">
+          <button class="btn" onclick="recalcDashboard()">হিসাব দেখুন</button>
+          <button class="btn ghost" onclick="seedDemo()">ডেমো ডাটা যোগ করুন</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FLEXI LOAD -->
+    <section class="card" data-page="flexi" hidden>
+      <h2>Flexi Load এন্ট্রি</h2>
+      <div class="row cols-4">
+        <div>
+          <label>তারিখ</label>
+          <input type="date" id="flexiDate" />
+        </div>
+        <div>
+          <label>ক্যাটাগরি</label>
+          <select id="flexiType">
+            <option>মোবাইল card</option>
+            <option>মোবাইল balance</option>
+            <option>cash</option>
+            <option>balance</option>
+          </select>
+        </div>
+        <div>
+          <label>টাকা</label>
+          <input type="number" id="flexiAmount" placeholder="0" />
+        </div>
+        <div>
+          <label>নোট</label>
+          <input id="flexiNote" placeholder="যেমন: গ্রামীণ, রবি..." />
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn" onclick="addFlexi()">➕ যোগ করুন</button>
+        <button class="btn secondary" onclick="filterFlexiToday()">আজকের তালিকা</button>
+      </div>
+
+      <h2 class="muted">এন্ট্রি তালিকা</h2>
+      <table>
+        <thead>
+          <tr><th>তারিখ</th><th>ক্যাটাগরি</th><th class="right">টাকা</th><th>নোট</th><th></th></tr>
+        </thead>
+        <tbody id="flexiTable"></tbody>
+        <tfoot>
+          <tr><th colspan="2" class="right">মোট</th><th class="right" id="flexiTotal">0</th><th colspan="2"></th></tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <!-- MOBILE BANKING -->
+    <section class="card" data-page="banking" hidden>
+      <h2>Mobile Banking এন্ট্রি</h2>
+      <div class="row cols-4">
+        <div>
+          <label>তারিখ</label>
+          <input type="date" id="bankDate" />
+        </div>
+        <div>
+          <label>ক্যাটাগরি</label>
+          <select id="bankType">
+            <option>bkash</option>
+            <option>nogod</option>
+            <option>rocket</option>
+            <option>mechanic accessories</option>
+            <option>achh</option>
+            <option>bank</option>
+            <option>yakub ali</option>
+            <option>saving suvo</option>
+            <option>bike</option>
+            <option>cash</option>
+          </select>
+        </div>
+        <div>
+          <label>টাকা</label>
+          <input type="number" id="bankAmount" placeholder="0" />
+        </div>
+        <div>
+          <label>নোট</label>
+          <input id="bankNote" placeholder="যেমন: সেন্ড/রিসিভ, রেফ..." />
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn" onclick="addBanking()">➕ যোগ করুন</button>
+        <button class="btn secondary" onclick="filterBankingToday()">আজকের তালিকা</button>
+      </div>
+
+      <h2 class="muted">এন্ট্রি তালিকা</h2>
+      <table>
+        <thead>
+          <tr><th>তারিখ</th><th>ক্যাটাগরি</th><th class="right">টাকা</th><th>নোট</th><th></th></tr>
+        </thead>
+        <tbody id="bankTable"></tbody>
+        <tfoot>
+          <tr><th colspan="2" class="right">মোট</th><th class="right" id="bankTotal">0</th><th colspan="2"></th></tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <!-- DAILY PROFIT -->
+    <section class="card" data-page="profit" hidden>
+      <h2>Daily Profit</h2>
+      <div class="row cols-5">
+        <div>
+          <label>তারিখ</label>
+          <input type="date" id="profitDate" />
+        </div>
+        <div>
+          <label>accessories</label>
+          <input type="number" id="pAccessories" placeholder="0" />
+        </div>
+        <div>
+          <label>mobile</label>
+          <input type="number" id="pMobile" placeholder="0" />
+        </div>
+        <div>
+          <label>flexiload</label>
+          <input type="number" id="pFlexi" placeholder="0" />
+        </div>
+        <div>
+          <label>mobile banking</label>
+          <input type="number" id="pBanking" placeholder="0" />
+        </div>
+      </div>
+      <div class="row cols-5">
+        <div>
+          <label>personal</label>
+          <input type="number" id="pPersonal" placeholder="0" />
+        </div>
+        <div>
+          <label>meker</label>
+          <input type="number" id="pMeker" placeholder="0" />
+        </div>
+        <div>
+          <label>daily expence</label>
+          <input type="number" id="pDailyExp" placeholder="0" />
+        </div>
+        <div>
+          <label>extra expence</label>
+          <input type="number" id="pExtraExp" placeholder="0" />
+        </div>
+        <div>
+          <label>all total</label>
+          <input id="pAllTotal" disabled />
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn" onclick="saveProfit()">💾 সেভ</button>
+        <button class="btn secondary" onclick="loadProfitForDate()">তারিখের ডাটা লোড</button>
+      </div>
+
+      <h2 class="muted">সংরক্ষিত Profit তালিকা</h2>
+      <table>
+        <thead>
+          <tr><th>তারিখ</th><th class="right">Total</th><th class="right">Daily Exp</th><th class="right">Extra</th><th class="right">All Total</th><th></th></tr>
+        </thead>
+        <tbody id="profitTable"></tbody>
+      </table>
+    </section>
+
+    <!-- DATA EXPORT -->
+    <section class="card" data-page="data" hidden>
+      <h2>ডাটা ব্যাকআপ / Export</h2>
+      <div class="footer">
+        <button class="btn" onclick="exportCSV()">⬇️ CSV এক্সপোর্ট</button>
+        <button class="btn secondary" onclick="downloadJSON()">⬇️ JSON ডাউনলোড</button>
+        <label class="pill" style="cursor:pointer">⬆️ JSON ইম্পোর্ট <input type="file" id="jsonFile" accept="application/json" style="display:none" onchange="importJSON(event)" /></label>
+        <button class="btn danger" onclick="if(confirm('সব ডাটা মুছে যাবে! নিশ্চিত?')){localStorage.removeItem('ms_ledger');renderAll()}">🗑️ সব ডাটা মুছুন</button>
+      </div>
+      <div class="row cols-3">
+        <div class="card"><h3>মোট Flexi Load</h3><div id="sumFlexiAll" class="v">0</div></div>
+        <div class="card"><h3>মোট Mobile Banking</h3><div id="sumBankingAll" class="v">0</div></div>
+        <div class="card"><h3>মোট Profit (All Total)</h3><div id="sumProfitAll" class="v">0</div></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ---------- Utilities ----------
+    const $ = s => document.querySelector(s);
+    const todayStr = () => new Date().toISOString().slice(0,10);
+
+    function getStore(){
+      const raw = localStorage.getItem('ms_ledger');
+      if(!raw) return {flexi:[],banking:[],profit:[]};
+      try{ return JSON.parse(raw);}catch(e){ return {flexi:[],banking:[],profit:[]}; }
+    }
+    function setStore(obj){ localStorage.setItem('ms_ledger', JSON.stringify(obj)); }
+
+    function number(v){ return Math.max(0, Number(v||0)); }
+    function sumBy(arr, pred){ return arr.reduce((t,x)=>t + number(pred(x)), 0); }
+    function fmt(n){ return (number(n)).toLocaleString('bn-BD', {maximumFractionDigits:2}); }
+
+    function setDatesToToday(){
+      ['flexiDate','bankDate','profitDate','dashDate'].forEach(id=>{ const el=$('#'+id); if(el) el.value = todayStr(); });
+    }
+
+    // ---------- Tabs ----------
+    document.querySelectorAll('.tab').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const t = btn.getAttribute('data-tab');
+        document.querySelectorAll('section[data-page]').forEach(s=>{ s.hidden = s.getAttribute('data-page')!==t; });
+      });
+    });
+
+    // ---------- Flexi Load ----------
+    function addFlexi(){
+      const s = getStore();
+      const rec = {
+        date: $('#flexiDate').value || todayStr(),
+        type: $('#flexiType').value,
+        amount: number($('#flexiAmount').value),
+        note: $('#flexiNote').value.trim()
+      };
+      if(!rec.amount){ alert('টাকার ঘর ঠিক করে দিন'); return; }
+      s.flexi.push(rec); setStore(s); renderFlexi(); renderDashboard();
+      $('#flexiAmount').value=''; $('#flexiNote').value='';
+    }
+    function deleteFlexi(idx){ const s=getStore(); s.flexi.splice(idx,1); setStore(s); renderFlexi(); renderDashboard(); }
+    function renderFlexi(filterDate=null){
+      const s=getStore();
+      const rows = (filterDate? s.flexi.filter(x=>x.date===filterDate): s.flexi)
+        .map((x,i)=>`<tr><td>${x.date}</td><td>${x.type}</td><td class="right">${fmt(x.amount)}</td><td>${x.note||''}</td><td class="right"><button class="btn danger" onclick="deleteFlexi(${i})">ডিলিট</button></td></tr>`)
+        .join('');
+      $('#flexiTable').innerHTML = rows || '<tr><td colspan="5" class="muted">কোনো ডাটা নেই</td></tr>';
+      const total = sumBy(filterDate? s.flexi.filter(x=>x.date===filterDate): s.flexi, x=>x.amount);
+      $('#flexiTotal').textContent = fmt(total);
+    }
+    function filterFlexiToday(){ renderFlexi(todayStr()); }
+
+    // ---------- Mobile Banking ----------
+    function addBanking(){
+      const s = getStore();
+      const rec = {
+        date: $('#bankDate').value || todayStr(),
+        type: $('#bankType').value,
+        amount: number($('#bankAmount').value),
+        note: $('#bankNote').value.trim()
+      };
+      if(!rec.amount){ alert('টাকার ঘর ঠিক করে দিন'); return; }
+      s.banking.push(rec); setStore(s); renderBanking(); renderDashboard();
+      $('#bankAmount').value=''; $('#bankNote').value='';
+    }
+    function deleteBanking(idx){ const s=getStore(); s.banking.splice(idx,1); setStore(s); renderBanking(); renderDashboard(); }
+    function renderBanking(filterDate=null){
+      const s=getStore();
+      const rows = (filterDate? s.banking.filter(x=>x.date===filterDate): s.banking)
+        .map((x,i)=>`<tr><td>${x.date}</td><td>${x.type}</td><td class="right">${fmt(x.amount)}</td><td>${x.note||''}</td><td class="right"><button class="btn danger" onclick="deleteBanking(${i})">ডিলিট</button></td></tr>`)
+        .join('');
+      $('#bankTable').innerHTML = rows || '<tr><td colspan="5" class="muted">কোনো ডাটা নেই</td></tr>';
+      const total = sumBy(filterDate? s.banking.filter(x=>x.date===filterDate): s.banking, x=>x.amount);
+      $('#bankTotal').textContent = fmt(total);
+    }
+    function filterBankingToday(){ renderBanking(todayStr()); }
+
+    // ---------- Profit ----------
+    function computeProfitAllTotal(){
+      const total = number($('#pAccessories').value) + number($('#pMobile').value) + number($('#pFlexi').value) + number($('#pBanking').value) + number($('#pPersonal').value) + number($('#pMeker').value);
+      const expenses = number($('#pDailyExp').value) + number($('#pExtraExp').value);
+      const all = total - expenses;
+      $('#pAllTotal').value = fmt(all);
+      return { total, expenses, all };
+    }
+    ['pAccessories','pMobile','pFlexi','pBanking','pPersonal','pMeker','pDailyExp','pExtraExp'].forEach(id=>{
+      document.addEventListener('input', e=>{ if(e.target && e.target.id===id) computeProfitAllTotal(); });
+    });
+
+    function saveProfit(){
+      const s = getStore();
+      const date = $('#profitDate').value || todayStr();
+      const p = {
+        date,
+        accessories: number($('#pAccessories').value),
+        mobile: number($('#pMobile').value),
+        flexiload: number($('#pFlexi').value),
+        mobilebanking: number($('#pBanking').value),
+        personal: number($('#pPersonal').value),
+        meker: number($('#pMeker').value),
+        daily_exp: number($('#pDailyExp').value),
+        extra_exp: number($('#pExtraExp').value)
+      };
+      // remove existing for same date
+      s.profit = s.profit.filter(x=>x.date!==date);
+      s.profit.push(p); setStore(s);
+      renderProfitTable(); renderDashboard();
+      alert('সেভ হয়েছে');
+    }
+    function loadProfitForDate(){
+      const s = getStore();
+      const date = $('#profitDate').value || todayStr();
+      const p = s.profit.find(x=>x.date===date);
+      if(!p){ alert('এই তারিখে কোনো ডাটা নেই'); return; }
+      $('#pAccessories').value = p.accessories; $('#pMobile').value = p.mobile; $('#pFlexi').value = p.flexiload; $('#pBanking').value = p.mobilebanking; $('#pPersonal').value = p.personal; $('#pMeker').value = p.meker; $('#pDailyExp').value = p.daily_exp; $('#pExtraExp').value = p.extra_exp; computeProfitAllTotal();
+    }
+    function deleteProfit(date){ const s=getStore(); s.profit = s.profit.filter(x=>x.date!==date); setStore(s); renderProfitTable(); renderDashboard(); }
+    function renderProfitTable(){
+      const s=getStore();
+      const rows = s.profit
+        .sort((a,b)=>a.date<b.date?1:-1)
+        .map(p=>{
+          const all = (p.accessories+p.mobile+p.flexiload+p.mobilebanking+p.personal+p.meker) - (p.daily_exp+p.extra_exp);
+          return `<tr><td>${p.date}</td><td class="right">${fmt(p.accessories+p.mobile+p.flexiload+p.mobilebanking+p.personal+p.meker)}</td><td class="right">${fmt(p.daily_exp)}</td><td class="right">${fmt(p.extra_exp)}</td><td class="right">${fmt(all)}</td><td class="right"><button class="btn danger" onclick="deleteProfit('${p.date}')">ডিলিট</button></td></tr>`;
+        }).join('');
+      $('#profitTable').innerHTML = rows || '<tr><td colspan="6" class="muted">কোনো ডাটা নেই</td></tr>';
+    }
+
+    // ---------- Dashboard ----------
+    function recalcDashboard(){
+      const s = getStore();
+      const d = $('#dashDate').value || todayStr();
+      $('#sumFlexiByDate').value = fmt(sumBy(s.flexi.filter(x=>x.date===d), x=>x.amount));
+      $('#sumBankingByDate').value = fmt(sumBy(s.banking.filter(x=>x.date===d), x=>x.amount));
+    }
+    function renderDashboard(){
+      const s = getStore();
+      const d = todayStr();
+      $('#todayLabel').textContent = d;
+      const flexiToday = sumBy(s.flexi.filter(x=>x.date===d), x=>x.amount);
+      const bankToday  = sumBy(s.banking.filter(x=>x.date===d), x=>x.amount);
+      const p = s.profit.find(x=>x.date===d);
+      const all = p ? (p.accessories+p.mobile+p.flexiload+p.mobilebanking+p.personal+p.meker) - (p.daily_exp+p.extra_exp) : 0;
+      $('#sumFlexiToday').textContent = fmt(flexiToday);
+      $('#sumBankingToday').textContent = fmt(bankToday);
+      $('#sumProfitToday').textContent = fmt(p? all : 0);
+      $('#sumAllToday').textContent = fmt(flexiToday + bankToday + (p? all:0));
+    }
+    function resetToday(){
+      const s = getStore(); const d=todayStr();
+      s.flexi = s.flexi.filter(x=>x.date!==d);
+      s.banking = s.banking.filter(x=>x.date!==d);
+      s.profit = s.profit.filter(x=>x.date!==d);
+      setStore(s); renderAll();
+    }
+
+    // ---------- Export / Import ----------
+    function toCSV(){
+      const s = getStore();
+      const lines = [];
+      lines.push('SECTION,DATE,TYPE,AMOUNT,NOTE');
+      s.flexi.forEach(x=>lines.push(['FLEXI',x.date,x.type,x.amount,x.note||''].map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')));
+      s.banking.forEach(x=>lines.push(['BANKING',x.date,x.type,x.amount,x.note||''].map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')));
+      lines.push('PROFIT,DATE,ACCESSORIES,MOBILE,FLEXILOAD,MOBILE_BANKING,PERSONAL,MEKER,DAILY_EXP,EXTRA_EXP,ALL_TOTAL');
+      s.profit.forEach(p=>{
+        const all = (p.accessories+p.mobile+p.flexiload+p.mobilebanking+p.personal+p.meker) - (p.daily_exp+p.extra_exp);
+        lines.push(['PROFIT',p.date,p.accessories,p.mobile,p.flexiload,p.mobilebanking,p.personal,p.meker,p.daily_exp,p.extra_exp,all].join(','));
+      });
+      return lines.join('\n');
+    }
+    function exportCSV(){
+      const csv = toCSV();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+      a.download = 'mobile-shop-ledger.csv';
+      a.click();
+    }
+    function downloadJSON(){
+      const data = JSON.stringify(getStore(), null, 2);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([data],{type:'application/json'}));
+      a.download = 'mobile-shop-ledger.json';
+      a.click();
+    }
+    function importJSON(ev){
+      const file = ev.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { try{ const obj = JSON.parse(reader.result); if(obj && obj.flexi && obj.banking && obj.profit){ setStore(obj); renderAll(); alert('ইম্পোর্ট সম্পন্ন'); } else { alert('ফাইল ফরম্যাট ঠিক নেই'); } }catch(e){ alert('ফাইল পড়া যায়নি'); } };
+      reader.readAsText(file);
+    }
+
+    // ---------- Helpers ----------
+    function seedDemo(){
+      const s = getStore(); const d=todayStr();
+      s.flexi.push({date:d,type:'মোবাইল card',amount:500,note:'Robi'});
+      s.flexi.push({date:d,type:'cash',amount:200,note:'Grameen'});
+      s.banking.push({date:d,type:'bkash',amount:1200,note:'Send'});
+      s.banking.push({date:d,type:'nogod',amount:800,note:'Cashin'});
+      s.profit = s.profit.filter(x=>x.date!==d);
+      s.profit.push({date:d,accessories:700,mobile:1500,flexiload:300,mobilebanking:400,personal:0,meker:0,daily_exp:200,extra_exp:50});
+      setStore(s); renderAll();
+    }
+
+    function renderAll(){
+      renderFlexi(); renderBanking(); renderProfitTable(); renderDashboard();
+      const s=getStore();
+      $('#sumFlexiAll').textContent = fmt(sumBy(s.flexi, x=>x.amount));
+      $('#sumBankingAll').textContent = fmt(sumBy(s.banking, x=>x.amount));
+      const totalAllProfit = s.profit.reduce((t,p)=> t + ((p.accessories+p.mobile+p.flexiload+p.mobilebanking+p.personal+p.meker) - (p.daily_exp+p.extra_exp)), 0);
+      $('#sumProfitAll').textContent = fmt(totalAllProfit);
+    }
+
+    // ---------- Init ----------
+    setDatesToToday();
+    renderAll();
+  </script>
+</body>
+</html>
